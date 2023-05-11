@@ -41,32 +41,34 @@ function getBooks() {
 }
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn', function (req, res) {
+public_users.get('/isbn/:isbn', async function (req, res) {
   const isbn = parseInt(req.params.isbn);
-
-  findBookByISBN(isbn, (err, foundBook) => {
-      if (err) {
-          return res.status(500).json({message: "Error finding book."});
+  
+  try {
+    const foundBook = await findBookByISBN(isbn);
+    
+    if (foundBook) {
+      res.send(JSON.stringify(foundBook));
+    } else {
+      res.status(404).json({message: "Couldn't find book."});
       }
-
-      if (foundBook) {
-          res.send(JSON.stringify(foundBook));
-      } else {
-          res.status(404).json({message: "Couldn't find book."});
-      }
-  });
+    } catch (err) {
+      res.status(500).json({message: "Trouble finding your book."});
+    }
 });
 
-function findBookByISBN(isbn, callback) {
+function findBookByISBN(isbn) {
+  return new Promise((resolve, reject) => {
     const bookKeys = Object.keys(books);
     for (const key of bookKeys) {
         const book = books[key];
         if (parseInt(key) === isbn) {
-            return callback(null, book);
+            return resolve(book);
         }
     }
 
-    callback(null,null);
+    resolve(null);
+});
 }
   
 // Get book details based on author
